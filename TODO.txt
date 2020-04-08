@@ -1,0 +1,35 @@
+https://www.imdb.com/interfaces/
+
+1a. Download title.basics.tsv.gz and collect all tconst where titleType='movie' as Set[String].
+1b. Map to JSON object:
+
+{
+	tconst: String,
+	primaryTitle: String,
+	startYear: Int,
+	isAdult: Boolean, // Fun binary filter.
+	runtimeMinutes: Double, // Could filter by runtime.
+	genres: List[String]
+}
+
+2a. Download title.ratings.tsv.gz and sort by averageRating descending.
+2b. (Limit dataset to begin with) Collect top 1000 tconst where tconst in Set of tconst found in 1a.
+
+3a. Download title.principals.tsv.gz and collect all tconst where tconst in Set of tconst found in 1a.
+3b. For each tconst, collect all nconst where category='actor' or category='actress'.
+3c. Append to JSON object in step 1c:
+
+{
+	nconsts: List[String], // Name IDs of actors in the film.
+}
+
+4a. Download name.basics.tsv.gz and map to JSON Object:
+
+{
+	nconst: String,
+	primaryName: String,
+	birthYear: Int,
+	deathYear: Int
+}
+
+4b. Map the nconsts: List[String] in step 3c to a List of actor/actress JSON objects built in 4a.
