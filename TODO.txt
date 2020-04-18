@@ -12,16 +12,16 @@ https://www.imdb.com/interfaces/
 	primaryTitle: String,
 	startYear: Int,
 	isAdult: Boolean,
-	runtimeMinutes: Double,
+	runtimeMinutes: Int,
 	genres: List[String]
 }
 
-4a. Download title.principals.tsv.gz and collect all tconst where tconst in Set of tconst found in 1a.
-4b. For each tconst, collect all nconst where category=='actor' or category=='actress'.
-4c. Append to JSON object in step 1c:
+4a. Download title.principals.tsv.gz and build a map of tconst -> basic movie details.
+4b. For each tconst in 4a, collect all nconst where category=='actor' or category=='actress' in title.principals.tsv.gz.
+4c. Append to JSON object in step 3:
 
 {
-	nconsts: List[String], // Name IDs of actors in the film.
+	actorsNconst: List[String], // Name IDs of actors in the film.
 }
 
 5a. Download name.basics.tsv.gz and map to JSON Object:
@@ -33,4 +33,4 @@ https://www.imdb.com/interfaces/
 	deathYear: Int
 }
 
-5b. Map the nconsts: List[String] in step 3c to a List of actor/actress JSON objects built in 4a.
+5b. Map the nconsts: List[String] in step 4c to a List of actor/actress JSON objects built in 5a.
