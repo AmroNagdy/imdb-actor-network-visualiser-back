@@ -8,17 +8,17 @@ import json
 from typing import *
 
 base_url = 'https://datasets.imdbws.com/'
-
 title_basics = 'title.basics.tsv.gz'
 title_ratings = 'title.ratings.tsv.gz'
 title_principals = 'title.principals.tsv.gz'
 name_basics = 'name.basics.tsv.gz'
+
 actors_key = 'actors'
 
 output_file_name = 'actor_relationships.json'
 
-def get(split_line: List[str], heading_index: Dict[str, int], heading: str, type_conversion_lambda=None) -> Any:
-    entry = split_line[heading_index[heading]]
+def get(split_row: List[str], headings_to_index: Dict[str, int], heading: str, type_conversion_lambda=None) -> Any:
+    entry = split_row[headings_to_index[heading]]
 
     if entry == '\\N':
         return None
@@ -27,28 +27,33 @@ def get(split_line: List[str], heading_index: Dict[str, int], heading: str, type
     else:
         return entry
 
-def get_response_as_list(url: str, stream: bool) -> List[str]:
-    response = requests.get(url, stream=stream)
+def split(row: str) -> List[str]:
+    return row.decode('utf-8').split('\t')
+
+def get_headings_to_index(heading_row: str) -> Dict[str, int]:
+    return { heading: index for (index, heading) in enumerate(split(heading_row)) }
+
+def get_headings_and_data(url: str) -> Tuple[Dict[str, int], List[str]]:
+    response = requests.get(url, stream=True)
     content = gzip.decompress(response.content)
-    return content.splitlines()
+    headings_and_data = content.splitlines()
+    headings_to_index = get_headings_to_index(headings_and_data[0])
+
+    return headings_to_index, headings_and_data[1:]
 
 # Collect movie tconsts from title_basics.
 def get_movie_tconsts() -> Set[str]:
     movie_tconsts = set()
 
-    response_list = get_response_as_list(base_url + title_basics, stream=True)
-    heading_row = True
+    headings_to_index, data = get_headings_and_data(base_url + title_basics)
 
-    for line in response_list:
-        if heading_row:
-            heading_row = False
-            continue
+    for row in data:
+        split_row = split(row)
 
-        split_line = line.decode('utf-8').split('\t')
-
-        title_type = split_line[1]
+        title_type = get(split_row, headings_to_index, 'titleType')
         if title_type == 'movie':
-            movie_tconsts.add(split_line[0])
+            tconst = get(split_row, headings_to_index, 'tconst')
+            movie_tconsts.add(tconst)
 
     print(f"Successfully collected {len(movie_tconsts)} movie tconsts.")
     return movie_tconsts
@@ -57,17 +62,13 @@ def get_movie_tconsts() -> Set[str]:
 def get_top_n_movie_ratings_and_tconsts(movie_tconsts: Set[str], limit: int) -> Tuple[float, str]:
     top_n_movie_tconsts = []
 
-    response_list = get_response_as_list(base_url + title_ratings, stream=True)
-    heading_row = True
+    headings_to_index, data = get_headings_and_data(base_url + title_ratings)
 
-    for line in response_list:
-        if heading_row:
-            heading_row = False
-            continue
+    for row in data:
+        split_row = split(row)
 
-        split_line = line.decode('utf-8').split('\t')
-
-        tconst, rating = split_line[0], float(split_line[1])
+        tconst = get(split_row, headings_to_index, 'tconst')
+        rating = get(split_row, headings_to_index, 'averageRating', lambda x: float(x))
         if tconst in movie_tconsts:
             if len(top_n_movie_tconsts) == limit:
                 min_rating_in_top_n_movies = top_n_movie_tconsts[0][0]
@@ -82,33 +83,25 @@ def get_top_n_movie_ratings_and_tconsts(movie_tconsts: Set[str], limit: int) -> 
     return top_n_movie_tconsts
 
 # Collect basic movie details for the specified tconsts.
-def get_basic_movie_details(rating_and_tconsts: Tuple[float, str]) -> Dict[str, Any]:
+def get_basic_movie_details(rating_and_tconsts: List[Tuple[float, str]]) -> Dict[str, Any]:
     tconst_to_rating = dict([tup[::-1] for tup in rating_and_tconsts])
     basic_movie_details = {}
 
-    response_list = get_response_as_list(base_url + title_basics, stream=True)
-    heading_row = True
-    heading_index = {}
+    headings_to_index, data = get_headings_and_data(base_url + title_basics)
 
-    for line in response_list:
-        split_line = line.decode('utf-8').split('\t')
+    for row in data:
+        split_row = split(row)
 
-        if heading_row:
-            for i, heading in enumerate(split_line):
-                heading_index[heading] = i
-            heading_row = False
-            continue
-
-        tconst = split_line[0]
+        tconst = get(split_row, headings_to_index, 'tconst')
         if tconst in tconst_to_rating.keys():
             basic_movie_details[tconst] = {
                 'tconst': tconst,
                 'averageRating': tconst_to_rating[tconst],
-                'primaryTitle': get(split_line, heading_index, 'primaryTitle'),
-                'startYear': get(split_line, heading_index, 'startYear', lambda x: int(x)),
-                'isAdult': get(split_line, heading_index, 'isAdult', lambda x: bool(int(x))),
-                'runtimeMinutes': get(split_line, heading_index, 'runtimeMinutes', lambda x: int(x)),
-                'genres': get(split_line, heading_index, 'genres', lambda x: x.split(','))
+                'primaryTitle': get(split_row, headings_to_index, 'primaryTitle'),
+                'startYear': get(split_row, headings_to_index, 'startYear', lambda x: int(x)),
+                'isAdult': get(split_row, headings_to_index, 'isAdult', lambda x: bool(int(x))),
+                'runtimeMinutes': get(split_row, headings_to_index, 'runtimeMinutes', lambda x: int(x)),
+                'genres': get(split_row, headings_to_index, 'genres', lambda x: x.split(','))
             }
 
     print(f'Successfully collected basic details for {len(basic_movie_details)} movies.')
@@ -118,20 +111,14 @@ def get_basic_movie_details(rating_and_tconsts: Tuple[float, str]) -> Dict[str, 
 def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
     tconst_set = movie_details.keys()
 
-    response_list = get_response_as_list(base_url + title_principals, stream=True)
-    heading_row = True
-    heading_index = {}
+    headings_to_index, data = get_headings_and_data(base_url + title_principals)
 
-    for line in response_list:
-        split_line = line.decode('utf-8').split('\t')
+    for row in data:
+        split_row = split(row)
 
-        if heading_row:
-            for i, heading in enumerate(split_line):
-                heading_index[heading] = i
-            heading_row = False
-            continue
-
-        tconst, nconst, category = split_line[heading_index['tconst']], split_line[heading_index['nconst']], split_line[heading_index['category']]
+        tconst = get(split_row, headings_to_index, 'tconst')
+        nconst = get(split_row, headings_to_index, 'nconst')
+        category = get(split_row, headings_to_index, 'category')
         if tconst in tconst_set:
             if category in {'actor', 'actress'}:
                 details = movie_details[tconst]
@@ -158,26 +145,18 @@ def update_with_basic_actor_details(movie_details: Dict[str, Any]) -> None:
 
     nconst_to_details = {}
 
-    response_list = get_response_as_list(base_url + name_basics, stream=True)
-    heading_row = True
-    heading_index = {}
+    headings_to_index, data = get_headings_and_data(base_url + name_basics)
 
-    for line in response_list:
-        split_line = line.decode('utf-8').split('\t')
+    for row in data:
+        split_row = split(row)
 
-        if heading_row:
-            for i, heading in enumerate(split_line):
-                heading_index[heading] = i
-            heading_row = False
-            continue
-
-        nconst = split_line[heading_index['nconst']]
+        nconst = get(split_row, headings_to_index, 'nconst')
         if nconst in relevant_nconsts:
             nconst_to_details[nconst] = {
                 'nconst': nconst,
-                'primaryName': get(split_line, heading_index, 'primaryName'),
-                'birthYear': get(split_line, heading_index, 'birthYear', lambda x: int(x)),
-                'deathYear': get(split_line, heading_index, 'deathYear', lambda x: int(x)),
+                'primaryName': get(split_row, headings_to_index, 'primaryName'),
+                'birthYear': get(split_row, headings_to_index, 'birthYear', lambda x: int(x)),
+                'deathYear': get(split_row, headings_to_index, 'deathYear', lambda x: int(x)),
             }
 
     # Map list of nconsts in the actors_key in the movie_details to basic actor details.
