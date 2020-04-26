@@ -1,3 +1,3 @@
 __pycache__/
 *.pyc
-.actor_relationships.json
+/src/data/actor_relationships.json
