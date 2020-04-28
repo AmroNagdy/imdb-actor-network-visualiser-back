@@ -1,19 +1,16 @@
-// https://observablehq.com/@d3/force-directed-graph
-// https://github.com/d3/d3-force
-
 const height = 600;
 const width = 600;
 
 // Data.
 const data = {
   "nodes": [
-    { "id": "Amro", "group": 1 },
-    { "id": "Ava", "group": 1 },
-    { "id": "Harriet", "group": 2 }
+    { "id": "A", "group": 1 },
+    { "id": "B", "group": 1 },
+    { "id": "C", "group": 2 }
   ],
   "links": [
-    { "source": "Amro", "target": "Ava", "weight": 10 },
-    { "source": "Amro", "target": "Harriet", "weight": 4 }
+    { "source": "A", "target": "B", "weight": 10 },
+    { "source": "A", "target": "C", "weight": 4 }
   ]
 };
 
