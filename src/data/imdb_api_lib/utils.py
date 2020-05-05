@@ -1,7 +1,7 @@
 import gzip
 import requests
 
-from typing import *
+from typing import List, Dict, Tuple, Any
 
 def get(split_row: List[str], headings_to_index: Dict[str, int], heading: str, type_conversion_lambda=None) -> Any:
     entry = split_row[headings_to_index[heading]]

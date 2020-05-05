@@ -4,15 +4,19 @@ const width = 600;
 // Data.
 const data = {
   "nodes": [
-    { "id": "A", "group": 1 },
-    { "id": "B", "group": 1 },
-    { "id": "C", "group": 2 }
+    { "id": "A"},
+    { "id": "B"},
+    { "id": "C"}
   ],
   "links": [
     { "source": "A", "target": "B", "weight": 10 },
     { "source": "A", "target": "C", "weight": 4 }
   ]
 };
+
+$.getJSON('http://127.0.0.1:5001/api/get-network', function(data) {
+  console.log(data)
+});
 
 const getColour = group => {
   const colours = d3.schemeCategory10;

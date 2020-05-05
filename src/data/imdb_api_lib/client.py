@@ -1,7 +1,7 @@
 import heapq
 
-from imdb_api_lib.utils import *
-from typing import *
+import utils
+from typing import Set, List, Dict, Tuple, Any
 
 base_url = 'https://datasets.imdbws.com/'
 title_basics = 'title.basics.tsv.gz'
@@ -15,14 +15,14 @@ actors_key = 'actors'
 def get_movie_tconsts() -> Set[str]:
     movie_tconsts = set()
 
-    headings_to_index, data = get_headings_and_data(base_url + title_basics)
+    headings_to_index, data = utils.get_headings_and_data(base_url + title_basics)
 
     for row in data:
-        split_row = split(row)
+        split_row = utils.split(row)
 
-        title_type = get(split_row, headings_to_index, 'titleType')
+        title_type = utils.get(split_row, headings_to_index, 'titleType')
         if title_type == 'movie':
-            tconst = get(split_row, headings_to_index, 'tconst')
+            tconst = utils.get(split_row, headings_to_index, 'tconst')
             movie_tconsts.add(tconst)
 
     print(f"Successfully collected {len(movie_tconsts)} movie tconsts.")
@@ -32,13 +32,13 @@ def get_movie_tconsts() -> Set[str]:
 def get_top_n_movie_ratings_and_tconsts(movie_tconsts: Set[str], limit: int) -> List[Tuple[float, str]]:
     top_n_movie_tconsts = []
 
-    headings_to_index, data = get_headings_and_data(base_url + title_ratings)
+    headings_to_index, data = utils.get_headings_and_data(base_url + title_ratings)
 
     for row in data:
-        split_row = split(row)
+        split_row = utils.split(row)
 
-        tconst = get(split_row, headings_to_index, 'tconst')
-        rating = get(split_row, headings_to_index, 'averageRating', lambda x: float(x))
+        tconst = utils.get(split_row, headings_to_index, 'tconst')
+        rating = utils.get(split_row, headings_to_index, 'averageRating', lambda x: float(x))
         if tconst in movie_tconsts:
             if len(top_n_movie_tconsts) == limit:
                 min_rating_in_top_n_movies = top_n_movie_tconsts[0][0]
@@ -57,21 +57,22 @@ def get_basic_movie_details(rating_and_tconsts: List[Tuple[float, str]]) -> Dict
     tconst_to_rating = dict([tup[::-1] for tup in rating_and_tconsts])
     basic_movie_details = {}
 
-    headings_to_index, data = get_headings_and_data(base_url + title_basics)
+    headings_to_index, data = utils.get_headings_and_data(base_url + title_basics)
 
     for row in data:
-        split_row = split(row)
+        split_row = utils.split(row)
 
-        tconst = get(split_row, headings_to_index, 'tconst')
+        tconst = utils.get(split_row, headings_to_index, 'tconst')
         if tconst in tconst_to_rating.keys():
+            genres = utils.get(split_row, headings_to_index, 'genres', lambda x: x.split(','))
             basic_movie_details[tconst] = {
                 'tconst': tconst,
                 'averageRating': tconst_to_rating[tconst],
-                'primaryTitle': get(split_row, headings_to_index, 'primaryTitle'),
-                'startYear': get(split_row, headings_to_index, 'startYear', lambda x: int(x)),
-                'isAdult': get(split_row, headings_to_index, 'isAdult', lambda x: bool(int(x))),
-                'runtimeMinutes': get(split_row, headings_to_index, 'runtimeMinutes', lambda x: int(x)),
-                'genres': get(split_row, headings_to_index, 'genres', lambda x: x.split(','))
+                'primaryTitle': utils.get(split_row, headings_to_index, 'primaryTitle'),
+                'startYear': utils.get(split_row, headings_to_index, 'startYear', lambda x: int(x)),
+                'isAdult': utils.get(split_row, headings_to_index, 'isAdult', lambda x: bool(int(x))),
+                'runtimeMinutes': utils.get(split_row, headings_to_index, 'runtimeMinutes', lambda x: int(x)),
+                'genres': genres if genres is not None else []
             }
 
     print(f'Successfully collected basic details for {len(basic_movie_details)} movies.')
@@ -81,14 +82,14 @@ def get_basic_movie_details(rating_and_tconsts: List[Tuple[float, str]]) -> Dict
 def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
     tconst_set = movie_details.keys()
 
-    headings_to_index, data = get_headings_and_data(base_url + title_principals)
+    headings_to_index, data = utils.get_headings_and_data(base_url + title_principals)
 
     for row in data:
-        split_row = split(row)
+        split_row = utils.split(row)
 
-        tconst = get(split_row, headings_to_index, 'tconst')
-        nconst = get(split_row, headings_to_index, 'nconst')
-        category = get(split_row, headings_to_index, 'category')
+        tconst = utils.get(split_row, headings_to_index, 'tconst')
+        nconst = utils.get(split_row, headings_to_index, 'nconst')
+        category = utils.get(split_row, headings_to_index, 'category')
         if tconst in tconst_set:
             if category in {'actor', 'actress'}:
                 details = movie_details[tconst]
@@ -98,7 +99,7 @@ def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
                 else:
                     details[actors_key] = [nconst]
 
-    # Set any movie with no actors to have an empty list for the actors_key.
+    # Set any movie without any actors to have an empty list for the actors_key.
     for tconst, details in movie_details.items():
         if not actors_key in details.keys():
             details[actors_key] = []
@@ -115,18 +116,18 @@ def update_with_basic_actor_details(movie_details: Dict[str, Any]) -> None:
 
     nconst_to_details = {}
 
-    headings_to_index, data = get_headings_and_data(base_url + name_basics)
+    headings_to_index, data = utils.get_headings_and_data(base_url + name_basics)
 
     for row in data:
-        split_row = split(row)
+        split_row = utils.split(row)
 
-        nconst = get(split_row, headings_to_index, 'nconst')
+        nconst = utils.get(split_row, headings_to_index, 'nconst')
         if nconst in relevant_nconsts:
             nconst_to_details[nconst] = {
                 'nconst': nconst,
-                'primaryName': get(split_row, headings_to_index, 'primaryName'),
-                'birthYear': get(split_row, headings_to_index, 'birthYear', lambda x: int(x)),
-                'deathYear': get(split_row, headings_to_index, 'deathYear', lambda x: int(x)),
+                'primaryName': utils.get(split_row, headings_to_index, 'primaryName'),
+                'birthYear': utils.get(split_row, headings_to_index, 'birthYear', lambda x: int(x)),
+                'deathYear': utils.get(split_row, headings_to_index, 'deathYear', lambda x: int(x))
             }
 
     # Map list of nconsts in the actors_key in the movie_details to basic actor details.
