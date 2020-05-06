@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 /src/data/actor_relationships.json
 /src/data/useful_mongoimport.txt
+.vscode/
+env/
