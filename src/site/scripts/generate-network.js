@@ -1,12 +1,6 @@
 const height = 600;
 const width = 600;
 
-const getColour = group => {
-  const colours = d3.schemeCategory10;
-
-  return colours[group] % colours.length;
-};
-
 const drag = simulation => {
   function dragstarted(d) {
     if (!d3.event.active) simulation.alphaTarget(0.3).restart();
@@ -31,7 +25,7 @@ const drag = simulation => {
     .on("end", dragended);
 };
 
-$.getJSON('http://127.0.0.1:5000/api/get-network', function(data) {
+$.getJSON('http://127.0.0.1:5000/api/get-full-network', function(data) {
   const links = data.links.map(link => Object.create(link));
   const nodes = data.nodes.map(node => Object.create(node));
 
@@ -60,7 +54,6 @@ $.getJSON('http://127.0.0.1:5000/api/get-network', function(data) {
     .data(nodes)
     .join("circle")
     .attr("r", 5)
-    .attr("fill", d => getColour(d.group))
     .call(drag(simulation));
 
   node.append("title")

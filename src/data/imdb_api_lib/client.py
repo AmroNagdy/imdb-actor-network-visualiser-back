@@ -66,7 +66,7 @@ def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[s
                 keys.GENRES: genres if genres is not None else []
             }
 
-    print(f'Successfully collected basic details for {len(basic_movie_details)} movies.')
+    print(f'Successfully collected details for {len(basic_movie_details)} movies.')
     return basic_movie_details
 
 # Add actor nconsts to each movie_details entry.
@@ -95,17 +95,17 @@ def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
         if not keys.ACTORS in details.keys():
             details[keys.ACTORS] = []
 
-    print(f'Successfully updated basic movie details with actor and actress nconsts.')
+    print(f'Successfully updated movie details with actor and actress nconsts.')
 
 # Map actor nconsts to basic actor details dictionary.
-def update_with_basic_actor_details(movie_details: Dict[str, Any]) -> None:
+def get_basic_actor_details(movie_details: Dict[str, Any]) -> List[Dict[str, Any]]:
     # Collect all relevant nconsts from movie_and_actor_details.
     relevant_nconsts = set()
     for details in movie_details.values():
         for nconst in details[keys.ACTORS]:
             relevant_nconsts.add(nconst)
 
-    nconst_to_details = {}
+    actor_details = []
 
     headings_to_index, data = utils.get_headings_and_data(NAME_BASICS)
 
@@ -114,15 +114,12 @@ def update_with_basic_actor_details(movie_details: Dict[str, Any]) -> None:
 
         nconst = utils.get(split_row, headings_to_index, keys.NCONST)
         if nconst in relevant_nconsts:
-            nconst_to_details[nconst] = {
+            actor_details.append({
                 keys.NCONST: nconst,
                 keys.PRIMARY_NAME: utils.get(split_row, headings_to_index, keys.PRIMARY_NAME),
                 keys.BIRTH_YEAR: utils.get(split_row, headings_to_index, keys.BIRTH_YEAR, lambda x: int(x)),
                 keys.DEATH_YEAR: utils.get(split_row, headings_to_index, keys.DEATH_YEAR, lambda x: int(x))
-            }
+            })
 
-    # Map list of nconsts in the keys.ACTORS in the movie_details to basic actor details.
-    for details in movie_details.values():
-        details[keys.ACTORS] = [nconst_to_details.get(nconst) for nconst in details[keys.ACTORS] if nconst_to_details.get(nconst) is not None]
-
-    print(f'Successfully updated basic movie details with actor and actress basic details.')
+    print(f'Successfully collected {len(actor_details)} actor/actress details.')
+    return actor_details

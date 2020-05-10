@@ -13,28 +13,19 @@ app.config['MONGO_URI'] = 'mongodb+srv://ReadOnly:ReadOnly@cluster0-oboxf.mongod
 app.config['MONGO_DBNAME'] = 'movies'
 
 mongo = PyMongo(app)
-db = mongo.db
-collection = mongo.db['movies']
+movies_collection = mongo.db['movies']
+actors_collection = mongo.db['actors']
 
-@app.route('/api/get-network')
+@app.route('/api/get-full-network')
 def get_actor_network():
-    movies = collection.find()
+    movies = movies_collection.find()
 
-    nconst_to_name = {}
     links = {}
-
     for movie in movies:
         actors = movie[ACTORS_KEY]
         
         for actor_a, actor_b in itertools.combinations(actors, 2):
             nconst_a, nconst_b = actor_a[NCONST_KEY], actor_b[NCONST_KEY]
-            name_a, name_b = actor_a[NAME_KEY], actor_b[NAME_KEY]
-
-            # Add the nconst to name mapping if not already present.
-            if nconst_a not in nconst_to_name.keys():
-                nconst_to_name[nconst_a] = name_a
-            if nconst_b not in nconst_to_name.keys():
-                nconst_to_name[nconst_b] = name_b
 
             # Update link between two actors.
             link = (nconst_a, nconst_b)
@@ -42,6 +33,14 @@ def get_actor_network():
                 links[link] = 1
             else:
                 links[link] += 1
+
+    nconst_to_name = {}
+    for link in links:
+        for nconst in link:
+            if nconst not in nconst_to_name.keys():
+                actor_details = actors_collection.find_one({'nconst': nconst})
+                name = actor_details[NAME_KEY]
+                nconst_to_name[nconst] = name
 
     network = {
         'nodes': [ { 'id': nconst, 'name': name } for nconst, name in nconst_to_name.items() ],
