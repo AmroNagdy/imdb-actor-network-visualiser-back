@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+/src/data/movies.json
+/src/data/actors.json
+/src/data/useful_mongoimport.txt
+.vscode/
+env/
