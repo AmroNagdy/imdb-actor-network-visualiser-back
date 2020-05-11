@@ -1,5 +1,5 @@
 # Motivation
-For this project I wanted to develop a simple web interface that visualises some structured data using MongoDB and AWS for the backend. In doing so, I wanted to develop my JavaScript knowledge and use a popular data visualisation framework. I also wanted to apply Python to a more typical use-case: back-end data pulling and manipulation.
+For this project I wanted to create a simple web application that visualises some structured data. On the front-end, I wanted to learn JavaScript with the React framework and D3.js library. On the back-end, I wanted to learn REST API design in Python using Flask, as well as simple data requesting and manipulation processes. 
 
 # How To Use
 TBD
