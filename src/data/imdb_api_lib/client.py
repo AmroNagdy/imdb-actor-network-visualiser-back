@@ -113,10 +113,11 @@ def get_basic_actor_details(movie_details: Dict[str, Any]) -> List[Dict[str, Any
         split_row = utils.split(row)
 
         nconst = utils.get(split_row, headings_to_index, keys.NCONST)
-        if nconst in relevant_nconsts:
+        primary_name = utils.get(split_row, headings_to_index, keys.PRIMARY_NAME)
+        if nconst in relevant_nconsts and primary_name is not None:
             actor_details.append({
                 keys.NCONST: nconst,
-                keys.PRIMARY_NAME: utils.get(split_row, headings_to_index, keys.PRIMARY_NAME),
+                keys.PRIMARY_NAME: primary_name,
                 keys.BIRTH_YEAR: utils.get(split_row, headings_to_index, keys.BIRTH_YEAR, lambda x: int(x)),
                 keys.DEATH_YEAR: utils.get(split_row, headings_to_index, keys.DEATH_YEAR, lambda x: int(x))
             })
