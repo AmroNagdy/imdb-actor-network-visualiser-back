@@ -1,5 +1,4 @@
 import sys
-sys.path.append('./imdb_api_lib')
 import json
 import imdb_api_lib.client as client
 
@@ -16,8 +15,10 @@ if __name__ == '__main__':
 
     with open(movies_file_name, 'w') as output_file:
         json.dump(list(movie_details.values()), output_file)
-        print(f'Successfully written movie details as JSON to {movies_file_name}.')
+        print(
+            f'Successfully written movie details as JSON to {movies_file_name}.')
 
     with open(actors_file_name, 'w') as output_file:
         json.dump(actor_details, output_file)
-        print(f'Successfully written actor details as JSON to {actors_file_name}.')
+        print(
+            f'Successfully written actor details as JSON to {actors_file_name}.')

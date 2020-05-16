@@ -9,8 +9,9 @@ TITLE_RATINGS = 'title.ratings.tsv.gz'
 TITLE_PRINCIPALS = 'title.principals.tsv.gz'
 NAME_BASICS = 'name.basics.tsv.gz'
 
-# Collect movie tconsts from TITLE_BASICS.
+
 def get_movie_tconsts() -> Set[str]:
+    # Collect movie tconsts from TITLE_BASICS.
     movie_tconsts = set()
 
     headings_to_index, data = utils.get_headings_and_data(TITLE_BASICS)
@@ -26,8 +27,9 @@ def get_movie_tconsts() -> Set[str]:
     print(f"Successfully collected {len(movie_tconsts)} movie tconsts.")
     return movie_tconsts
 
-# Get the tconsts for the top n films.
+
 def get_movie_tconst_to_ratings(movie_tconsts: Set[str]) -> Dict[str, float]:
+    # Get the tconsts for the top n films.
     movie_tconst_to_ratings = {}
 
     headings_to_index, data = utils.get_headings_and_data(TITLE_RATINGS)
@@ -36,15 +38,18 @@ def get_movie_tconst_to_ratings(movie_tconsts: Set[str]) -> Dict[str, float]:
         split_row = utils.split(row)
 
         tconst = utils.get(split_row, headings_to_index, keys.TCONST)
-        rating = utils.get(split_row, headings_to_index, keys.AVERAGE_RATING, lambda x: float(x))
+        rating = utils.get(split_row, headings_to_index,
+                           keys.AVERAGE_RATING, lambda x: float(x))
         if tconst in movie_tconsts and rating is not None:
             movie_tconst_to_ratings[tconst] = rating
 
-    print(f'Successfully mapped {len(movie_tconst_to_ratings)} movie tconsts to ratings.')
+    print(
+        f'Successfully mapped {len(movie_tconst_to_ratings)} movie tconsts to ratings.')
     return movie_tconst_to_ratings
 
-# Collect basic movie details for the specified tconsts.
+
 def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[str, Any]:
+    # Collect basic movie details for the specified tconsts.
     basic_movie_details = {}
 
     headings_to_index, data = utils.get_headings_and_data(TITLE_BASICS)
@@ -54,7 +59,8 @@ def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[s
 
         tconst = utils.get(split_row, headings_to_index, keys.TCONST)
         if tconst in movie_tconst_to_ratings.keys():
-            genres = utils.get(split_row, headings_to_index, keys.GENRES, lambda x: x.split(','))
+            genres = utils.get(split_row, headings_to_index,
+                               keys.GENRES, lambda x: x.split(','))
 
             basic_movie_details[tconst] = {
                 keys.TCONST: tconst,
@@ -66,11 +72,13 @@ def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[s
                 keys.GENRES: genres if genres is not None else []
             }
 
-    print(f'Successfully collected details for {len(basic_movie_details)} movies.')
+    print(
+        f'Successfully collected details for {len(basic_movie_details)} movies.')
     return basic_movie_details
 
-# Add actor nconsts to each movie_details entry.
+
 def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
+    # Add actor nconsts to each movie_details entry.
     tconst_set = movie_details.keys()
 
     headings_to_index, data = utils.get_headings_and_data(TITLE_PRINCIPALS)
@@ -97,8 +105,10 @@ def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
 
     print(f'Successfully updated movie details with actor and actress nconsts.')
 
-# Map actor nconsts to basic actor details dictionary.
+
 def get_basic_actor_details(movie_details: Dict[str, Any]) -> List[Dict[str, Any]]:
+    # Map actor nconsts to basic actor details dictionary.
+
     # Collect all relevant nconsts from movie_and_actor_details.
     relevant_nconsts = set()
     for details in movie_details.values():
@@ -113,14 +123,17 @@ def get_basic_actor_details(movie_details: Dict[str, Any]) -> List[Dict[str, Any
         split_row = utils.split(row)
 
         nconst = utils.get(split_row, headings_to_index, keys.NCONST)
-        primary_name = utils.get(split_row, headings_to_index, keys.PRIMARY_NAME)
+        primary_name = utils.get(
+            split_row, headings_to_index, keys.PRIMARY_NAME)
         if nconst in relevant_nconsts and primary_name is not None:
             actor_details.append({
                 keys.NCONST: nconst,
                 keys.PRIMARY_NAME: primary_name,
                 keys.BIRTH_YEAR: utils.get(split_row, headings_to_index, keys.BIRTH_YEAR, lambda x: int(x)),
-                keys.DEATH_YEAR: utils.get(split_row, headings_to_index, keys.DEATH_YEAR, lambda x: int(x))
+                keys.DEATH_YEAR: utils.get(
+                    split_row, headings_to_index, keys.DEATH_YEAR, lambda x: int(x))
             })
 
-    print(f'Successfully collected {len(actor_details)} actor/actress details.')
+    print(
+        f'Successfully collected {len(actor_details)} actor/actress details.')
     return actor_details
