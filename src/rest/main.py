@@ -25,6 +25,13 @@ def search_actors_by_name():
     if name_substring is None or name_substring == '':
         return jsonify([])
 
+    query = {
+        'primaryName': {
+            '$regex': f'^.*{name_substring}.*$',
+            '$options': 'i'  # Case insensitive.
+        }
+    }
+
     def mappingFunction(actor):
         return {
             'nconst': actor['nconst'],
@@ -33,20 +40,19 @@ def search_actors_by_name():
             'deathYear': actor['deathYear']
         }
 
-    query = {
-        'primaryName': {
-            '$regex': f'^.*{name_substring}.*$',
-            '$options': 'i'  # Case insensitive.
-        }
-    }
-
     actors = actors_collection.find(query).limit(limit)
     return jsonify([mappingFunction(actor) for actor in actors])
 
 
-@app.route('/api/get-full-network')
-def get_actor_network():
-    movies = movies_collection.find()
+@app.route('/api/get-network-by-nconst', methods=['GET'])
+def get_network_by_nconst():
+    nconst = request.args.get('nconst')
+
+    query = {
+        'actors': nconst
+    }
+
+    movies = movies_collection.find(query)
 
     links = {}
     for movie in movies:
