@@ -6,3 +6,7 @@ __pycache__/
 .vscode/
 env/
 /src/flask_config/constants.py
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

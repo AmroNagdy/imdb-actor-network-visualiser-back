@@ -5,15 +5,20 @@ import flask_config.constants as constants
 from flask_pymongo import PyMongo
 from flask import Flask, request, jsonify
 
-app = Flask(__name__)
-app.config['MONGO_URI'] = constants.MONGO_URI
-app.config['MONGO_DBNAME'] = constants.MONGO_DBNAME
-mongo = PyMongo(app)
+application = Flask(__name__)
+application.config['MONGO_URI'] = constants.MONGO_URI
+application.config['MONGO_DBNAME'] = constants.MONGO_DBNAME
+mongo = PyMongo(application)
 movies_collection = mongo.db[keys.MOVIES]
 actors_collection = mongo.db[keys.ACTORS]
 
 
-@app.route('/api/search-actors-by-name', methods=['GET'])
+@application.route('/', methods=['GET'])
+def landing_page():
+    return '<p>Welcome page.</p>'
+
+
+@application.route('/api/search-actors-by-name', methods=['GET'])
 def search_actors_by_name():
     name_substring = request.args.get('name')
     limit = int(request.args.get('limit', default=10))
@@ -40,7 +45,7 @@ def search_actors_by_name():
     return jsonify([mappingFunction(actor) for actor in actors])
 
 
-@app.route('/api/get-network-by-nconst', methods=['GET'])
+@application.route('/api/get-network-by-nconst', methods=['GET'])
 def get_network_by_nconst():
     nconst = request.args.get(keys.NCONST)
 
@@ -78,4 +83,5 @@ def get_network_by_nconst():
     return jsonify(network)
 
 
-app.run()
+if __name__ == '__main__':
+    application.run()
