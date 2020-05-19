@@ -1,6 +1,6 @@
 import heapq
-import keys
-import utils
+from . import keys
+from . import utils
 
 from typing import Set, List, Dict, Tuple, Any
 
@@ -43,8 +43,7 @@ def get_movie_tconst_to_ratings(movie_tconsts: Set[str]) -> Dict[str, float]:
         if tconst in movie_tconsts and rating is not None:
             movie_tconst_to_ratings[tconst] = rating
 
-    print(
-        f'Successfully mapped {len(movie_tconst_to_ratings)} movie tconsts to ratings.')
+    print(f'Successfully mapped {len(movie_tconst_to_ratings)} movie tconsts to ratings.')
     return movie_tconst_to_ratings
 
 
@@ -58,7 +57,7 @@ def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[s
         split_row = utils.split(row)
 
         tconst = utils.get(split_row, headings_to_index, keys.TCONST)
-        if tconst in movie_tconst_to_ratings.keys():
+        if tconst in movie_tconst_to_ratings:
             genres = utils.get(split_row, headings_to_index,
                                keys.GENRES, lambda x: x.split(','))
 
@@ -72,8 +71,7 @@ def get_basic_movie_details(movie_tconst_to_ratings: Dict[str, float]) -> Dict[s
                 keys.GENRES: genres if genres is not None else []
             }
 
-    print(
-        f'Successfully collected details for {len(basic_movie_details)} movies.')
+    print(f'Successfully collected details for {len(basic_movie_details)} movies.')
     return basic_movie_details
 
 
@@ -93,14 +91,14 @@ def update_with_actor_nconsts(movie_details: Dict[str, Any]) -> None:
             if category in {'actor', 'actress'}:
                 details = movie_details[tconst]
 
-                if keys.ACTORS in details.keys():
+                if keys.ACTORS in details:
                     details[keys.ACTORS].append(nconst)
                 else:
                     details[keys.ACTORS] = [nconst]
 
     # Set any movie without any actors to have an empty list for the keys.ACTORS.
     for tconst, details in movie_details.items():
-        if not keys.ACTORS in details.keys():
+        if not keys.ACTORS in details:
             details[keys.ACTORS] = []
 
     print(f'Successfully updated movie details with actor and actress nconsts.')
@@ -134,6 +132,5 @@ def get_basic_actor_details(movie_details: Dict[str, Any]) -> List[Dict[str, Any
                     split_row, headings_to_index, keys.DEATH_YEAR, lambda x: int(x))
             })
 
-    print(
-        f'Successfully collected {len(actor_details)} actor/actress details.')
+    print(f'Successfully collected {len(actor_details)} actor/actress details.')
     return actor_details

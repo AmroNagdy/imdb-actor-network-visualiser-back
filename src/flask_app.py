@@ -1,20 +1,16 @@
 import itertools
+import imdb_api.keys as keys
+import flask_config.constants as constants
 
-from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
-
-
-ACTORS_KEY = 'actors'
-NCONST_KEY = 'nconst'
-NAME_KEY = 'primaryName'
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-app.config['MONGO_URI'] = 'mongodb+srv://ReadOnly:ReadOnly@cluster0-oboxf.mongodb.net/imdbActorNetworkVisualiserDB'
-app.config['MONGO_DBNAME'] = 'imdbActorNetworkVisualiserDB'
-
+app.config['MONGO_URI'] = constants.MONGO_URI
+app.config['MONGO_DBNAME'] = constants.MONGO_DBNAME
 mongo = PyMongo(app)
-movies_collection = mongo.db['movies']
-actors_collection = mongo.db['actors']
+movies_collection = mongo.db[keys.MOVIES]
+actors_collection = mongo.db[keys.ACTORS]
 
 
 @app.route('/api/search-actors-by-name', methods=['GET'])
@@ -26,7 +22,7 @@ def search_actors_by_name():
         return jsonify([])
 
     query = {
-        'primaryName': {
+        keys.PRIMARY_NAME: {
             '$regex': f'^.*{name_substring}.*$',
             '$options': 'i'  # Case insensitive.
         }
@@ -34,10 +30,10 @@ def search_actors_by_name():
 
     def mappingFunction(actor):
         return {
-            'nconst': actor['nconst'],
-            'primaryName': actor['primaryName'],
-            'birthYear': actor['birthYear'],
-            'deathYear': actor['deathYear']
+            keys.NCONST: actor[keys.NCONST],
+            keys.PRIMARY_NAME: actor[keys.PRIMARY_NAME],
+            keys.BIRTH_YEAR: actor[keys.BIRTH_YEAR],
+            keys.DEATH_YEAR: actor[keys.DEATH_YEAR]
         }
 
     actors = actors_collection.find(query).limit(limit)
@@ -46,20 +42,20 @@ def search_actors_by_name():
 
 @app.route('/api/get-network-by-nconst', methods=['GET'])
 def get_network_by_nconst():
-    nconst = request.args.get('nconst')
+    nconst = request.args.get(keys.NCONST)
 
     query = {
-        'actors': nconst
+        keys.ACTORS: nconst
     }
 
     movies = movies_collection.find(query)
 
     links = {}
     for movie in movies:
-        actors = movie['actors']
+        actors = sorted(movie[keys.ACTORS])  # Sort to make sure the itertools.combinations returns the correct set of links.
 
         for link in itertools.combinations(actors, 2):
-            if link not in links.keys():
+            if link not in links:
                 links[link] = 1
             else:
                 links[link] += 1
@@ -67,11 +63,11 @@ def get_network_by_nconst():
     nconst_to_name = {}
     for link in links:
         for nconst in link:
-            if nconst not in nconst_to_name.keys():
-                actor_details = actors_collection.find_one({'nconst': nconst})
+            if nconst not in nconst_to_name:
+                actor_details = actors_collection.find_one({keys.NCONST: nconst})
 
                 if actor_details is not None:
-                    name = actor_details['primaryName']
+                    name = actor_details[keys.PRIMARY_NAME]
                     nconst_to_name[nconst] = name
     available_nconsts = nconst_to_name.keys()
 

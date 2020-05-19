@@ -1,4 +1,5 @@
 ACTORS = 'actors'
+MOVIES = 'movies'
 NCONST = 'nconst'
 TCONST = 'tconst'
 TITLE_TYPE = 'titleType'

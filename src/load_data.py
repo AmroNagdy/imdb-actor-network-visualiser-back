@@ -1,11 +1,10 @@
-import sys
 import json
-import imdb_api_lib.client as client
-
-movies_file_name = 'movies.json'
-actors_file_name = 'actors.json'
+import imdb_api.client as client
 
 if __name__ == '__main__':
+    movies_file_name = 'movies.json'
+    actors_file_name = 'actors.json'
+
     movie_tconsts = client.get_movie_tconsts()
     movie_tconst_to_ratings = client.get_movie_tconst_to_ratings(movie_tconsts)
     movie_details = client.get_basic_movie_details(movie_tconst_to_ratings)
@@ -15,10 +14,8 @@ if __name__ == '__main__':
 
     with open(movies_file_name, 'w') as output_file:
         json.dump(list(movie_details.values()), output_file)
-        print(
-            f'Successfully written movie details as JSON to {movies_file_name}.')
+        print(f'Successfully written movie details as JSON to {movies_file_name}.')
 
     with open(actors_file_name, 'w') as output_file:
         json.dump(actor_details, output_file)
-        print(
-            f'Successfully written actor details as JSON to {actors_file_name}.')
+        print(f'Successfully written actor details as JSON to {actors_file_name}.')
