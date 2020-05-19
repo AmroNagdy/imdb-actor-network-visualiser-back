@@ -4,7 +4,7 @@ __pycache__/
 /src/actors.json
 /src/useful_mongoimport.txt
 .vscode/
-env/
+virt/
 /src/flask_config/constants.py
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
