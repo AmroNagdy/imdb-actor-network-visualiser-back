@@ -3,7 +3,7 @@ import imdb_api.keys as keys
 import flask_config.constants as constants
 
 from flask_pymongo import PyMongo
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 
 application = Flask(__name__)
 application.config['MONGO_URI'] = constants.MONGO_URI
@@ -42,7 +42,7 @@ def search_actors_by_name():
         }
 
     actors = actors_collection.find(query).limit(limit)
-    response = jsonify([mappingFunction(actor) for actor in actors])
+    response = make_response(jsonify([mappingFunction(actor) for actor in actors]))
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
@@ -82,8 +82,8 @@ def get_network_by_nconst():
         'nodes': [{'id': nconst, 'name': name} for nconst, name in nconst_to_name.items()],
         'links': [{'source': link[0], 'target': link[1], 'weight': weight} for link, weight in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
     }
-    response = jsonify(network)
-    response..headers['Access-Control-Allow-Origin'] = '*'
+    response = make_response(jsonify(network))
+    response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
 
