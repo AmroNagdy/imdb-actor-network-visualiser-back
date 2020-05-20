@@ -42,7 +42,9 @@ def search_actors_by_name():
         }
 
     actors = actors_collection.find(query).limit(limit)
-    return jsonify([mappingFunction(actor) for actor in actors])
+    response = jsonify([mappingFunction(actor) for actor in actors])
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 @application.route('/api/get-network-by-nconst', methods=['GET'])
@@ -80,7 +82,9 @@ def get_network_by_nconst():
         'nodes': [{'id': nconst, 'name': name} for nconst, name in nconst_to_name.items()],
         'links': [{'source': link[0], 'target': link[1], 'weight': weight} for link, weight in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
     }
-    return jsonify(network)
+    response = jsonify(network)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 if __name__ == '__main__':
