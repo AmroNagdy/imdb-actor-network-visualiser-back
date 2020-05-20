@@ -15,7 +15,7 @@ actors_collection = mongo.db[keys.ACTORS]
 
 @application.route('/', methods=['GET'])
 def landing_page():
-    return '<h1>Deployed successfully!</h1>'
+    return '<h1>The Flask REST API is up and running!</h1>'
 
 
 @application.route('/api/search-actors-by-name', methods=['GET'])
@@ -43,7 +43,7 @@ def search_actors_by_name():
 
     actors = actors_collection.find(query).limit(limit)
     response = jsonify([mappingFunction(actor) for actor in actors])
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
 
@@ -83,7 +83,7 @@ def get_network_by_nconst():
         'links': [{'source': link[0], 'target': link[1], 'weight': weight} for link, weight in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
     }
     response = jsonify(network)
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response..headers['Access-Control-Allow-Origin'] = '*'
     return response
 
 

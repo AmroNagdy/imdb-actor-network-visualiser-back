@@ -7,6 +7,6 @@ __pycache__/
 virt/
 /src/flask_config/constants.py
 # Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
+/src/elasticbeanstalk/*
+!/src/elasticbeanstalk/*.cfg.yml
+!/src/elasticbeanstalk/*.global.yml
