@@ -15,7 +15,7 @@ actors_collection = mongo.db[keys.ACTORS]
 
 @application.route('/', methods=['GET'])
 def landing_page():
-    return '<p>Welcome page.</p>'
+    return '<h1>Deployed successfully!</h1>'
 
 
 @application.route('/api/search-actors-by-name', methods=['GET'])

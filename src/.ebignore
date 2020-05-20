@@ -1,2 +1,5 @@
 virt
 __pycache__/
+actors.json
+movies.json
+useful_mongoimport.txt
