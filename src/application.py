@@ -23,7 +23,10 @@ def search_actors_by_name():
     name_substring = request.args.get('name')
     limit = int(request.args.get('limit', default=10))
 
-    if name_substring is None or name_substring == '' or not name_substring.isalpha():
+    def string_is_valid(string):
+        return string is not None and string != '' and all(ch.isalpha() or ch.isspace() for ch in string)
+
+    if not string_is_valid(name_substring):
         return jsonify([])
 
     query = {
