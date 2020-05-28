@@ -60,15 +60,27 @@ def get_network_by_nconst():
 
     movies = movies_collection.find(query)
 
+    def extract_movie_details(movie):
+        return {
+            keys.AVERAGE_RATING: movie[keys.AVERAGE_RATING],
+            keys.PRIMARY_TITLE: movie[keys.PRIMARY_TITLE],
+            keys.START_YEAR: movie[keys.START_YEAR]
+        }
+
     links = {}
     for movie in movies:
-        actors = sorted(movie[keys.ACTORS])  # Sort to make sure the itertools.combinations returns the correct set of links.
+        actors = sorted(movie[keys.ACTORS])  # Sort to make sure the itertools.combinations returns a consistent set of links.
+        movie_details = extract_movie_details(movie)
 
         for link in itertools.combinations(actors, 2):
             if link not in links:
-                links[link] = 1
+                links[link] = {
+                    'weight': 1,
+                    'movies': [movie_details]
+                }
             else:
-                links[link] += 1
+                links[link]['weight'] += 1
+                links[link]['movies'].append(movie_details)
 
     nconst_to_name = {}
     for link in links:
@@ -83,7 +95,7 @@ def get_network_by_nconst():
 
     network = {
         'nodes': [{'id': nconst, 'name': name} for nconst, name in nconst_to_name.items()],
-        'links': [{'source': link[0], 'target': link[1], 'weight': weight} for link, weight in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
+        'links': [{'source': link[0], 'target': link[1], 'weight': link_details['weight'], 'movies': link_details['movies']} for link, link_details in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
     }
     response = make_response(jsonify(network))
     response.headers['Access-Control-Allow-Origin'] = '*'
