@@ -24,7 +24,7 @@ def search_actors_by_name():
     limit = int(request.args.get('limit', default=10))
 
     def string_is_valid(string):
-        return string is not None and string != '' and all(ch.isalpha() or ch.isspace() for ch in string)
+        return string is not None and string != '' and all(ch.isalnum() or ch.isspace() for ch in string)
 
     if not string_is_valid(name_substring):
         return jsonify([])
