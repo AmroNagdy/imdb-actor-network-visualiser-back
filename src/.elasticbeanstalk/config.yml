@@ -1,11 +1,15 @@
 branch-defaults:
   default:
-    environment: imdb-actor-network-visualiser
+    environment: imdb-network-api
     group_suffix: null
+environment-defaults:
+  imdb-network-api:
+    branch: null
+    repository: null
 global:
   application_name: ImdbActorNetworkVisualiser
   branch: null
-  default_ec2_keyname: aws-eb
+  default_ec2_keyname: null
   default_platform: Python 3.6 running on 64bit Amazon Linux
   default_region: eu-west-2
   include_git_submodules: true

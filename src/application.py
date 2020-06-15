@@ -1,9 +1,10 @@
 import itertools
 import imdb_api.keys as keys
 import flask_config.constants as constants
+import flask_config.utils as utils
 
 from flask_pymongo import PyMongo
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request
 
 application = Flask(__name__)
 application.config['MONGO_URI'] = constants.MONGO_URI
@@ -23,11 +24,8 @@ def search_actors_by_name():
     name_substring = request.args.get('name')
     limit = int(request.args.get('limit', default=10))
 
-    def string_is_valid(string):
-        return string is not None and string != '' and all(ch.isalnum() or ch.isspace() for ch in string)
-
-    if not string_is_valid(name_substring):
-        return jsonify([])
+    if not utils.string_is_valid(name_substring):
+        return utils.jsonify_response_with_cors([])
 
     query = {
         keys.PRIMARY_NAME: {
@@ -45,9 +43,9 @@ def search_actors_by_name():
         }
 
     actors = actors_collection.find(query).limit(limit)
-    response = make_response(jsonify([mappingFunction(actor) for actor in actors]))
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
+    response_content = [mappingFunction(actor) for actor in actors]
+
+    return utils.jsonify_response_with_cors(response_content)
 
 
 @application.route('/api/get-network-by-nconst', methods=['GET'])
@@ -62,6 +60,7 @@ def get_network_by_nconst():
 
     def extract_movie_details(movie):
         return {
+            keys.TCONST: movie[keys.TCONST],
             keys.AVERAGE_RATING: movie[keys.AVERAGE_RATING],
             keys.PRIMARY_TITLE: movie[keys.PRIMARY_TITLE],
             keys.START_YEAR: movie[keys.START_YEAR]
@@ -69,7 +68,8 @@ def get_network_by_nconst():
 
     links = {}
     for movie in movies:
-        actors = sorted(movie[keys.ACTORS])  # Sort to make sure the itertools.combinations returns a consistent set of links.
+        # Sort to make sure the itertools.combinations returns a consistent set of links.
+        actors = sorted(movie[keys.ACTORS])
         movie_details = extract_movie_details(movie)
 
         for link in itertools.combinations(actors, 2):
@@ -91,15 +91,31 @@ def get_network_by_nconst():
                 if actor_details is not None:
                     name = actor_details[keys.PRIMARY_NAME]
                     nconst_to_name[nconst] = name
-    available_nconsts = nconst_to_name.keys()
+
+    nconsts_with_names = nconst_to_name.keys()
+    networkNodes = [{'id': nconst, 'name': name} for nconst, name in nconst_to_name.items()]
+    networkLinks = [{'source': link[0], 'target': link[1], 'weight': link_details['weight'], 'movies': link_details['movies']} for link, link_details in links.items() if link[0] in nconsts_with_names and link[1] in nconsts_with_names]
+
+    actor_id_to_movie_details = {}
+    for node in networkNodes:
+        nconst = node['id']
+
+        # Identify the links in the network that feature the current actor.
+        links_featuring_nconst = [link for link in networkLinks if nconst in {link['source'], link['target']}]
+
+        # FlatMap the movies within each link and remove duplicates by using a set comprehension and converting the dicts to tuples for hashing.
+        movies_featuring_nconst = {tuple(movie.items()) for link in links_featuring_nconst for movie in link['movies']}
+
+        # Convert the movies from a tuple back to dict objects.
+        actor_id_to_movie_details[nconst] = sorted([dict(movie) for movie in movies_featuring_nconst], key=lambda m: m[keys.START_YEAR], reverse=True)
 
     network = {
-        'nodes': [{'id': nconst, 'name': name} for nconst, name in nconst_to_name.items()],
-        'links': [{'source': link[0], 'target': link[1], 'weight': link_details['weight'], 'movies': link_details['movies']} for link, link_details in links.items() if link[0] in available_nconsts and link[1] in available_nconsts]
+        'nodes': networkNodes,
+        'links': networkLinks,
+        'actorIdToMovieDetailsMap': actor_id_to_movie_details
     }
-    response = make_response(jsonify(network))
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
+
+    return utils.jsonify_response_with_cors(network)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 /src/movies.json
 /src/actors.json
-/src/useful_mongoimport.txt
+/src/mongoimport.sh
 .vscode/
 venv/
 /src/flask_config/constants.py
